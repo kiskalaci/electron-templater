@@ -71,7 +71,7 @@ function generateSingleFile(paths) {
         debugger;
         docx.save('nodebuffer', function (data) {
             // fs.writeFile("output.zip", data, function(err){/*...*/});
-            fs.writeFile(outputPath, data, function (err) {
+            fs.writeFileSync(outputPath, data, function (err) {
                 console.log(err);
             });
         });
