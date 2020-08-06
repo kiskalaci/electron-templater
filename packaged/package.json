@@ -1,0 +1,32 @@
+{
+  "name": "electronapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "Kiska László",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "9.1.1",
+    "electron-packager": "^15.0.0"
+  },
+  "build": {
+    "appId": "io.electronapp",
+    "files": [
+      "packaged/",
+      "index.html"
+    ],
+    "asar": true
+  },
+  "dependencies": {
+    "docx-merger": "^1.2.2",
+    "docxtemplater": "^3.17.9",
+    "mkdirp": "^1.0.4",
+    "pizzip": "^3.0.6",
+    "xlsx": "^0.16.4"
+  },
+  "debug": true
+}

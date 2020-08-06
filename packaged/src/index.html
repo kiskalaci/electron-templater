@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>PdfGeneralo</title>
+    <!-- https://electronjs.org/docs/tutorial/security#csp-meta-tag -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/colorcode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+</head>
+
+<body>
+
+
+
+
+    <div class="Container">
+
+
+        <div class="tab">
+            <button class="tablinks active" onclick="opentab(event, 'HomeTab')">Home</button>
+            <button class="tablinks" onclick="opentab(event, 'SettingsTab')">Sablonok</button>
+            <button class="tablinks" onclick="opentab(event, 'InfoTab')">Info</button>
+        </div>
+
+
+
+        <div class="content">
+
+            <div id="HomeTab" class="tabcontent">
+
+
+
+
+
+                <div class="group">
+                    <h2>Generálandó Documentumok</h2>
+                    <div class="rw" id="templateGrid"></div>
+                </div>
+
+                <div class="form-group group">
+                    <h2>Excel Munkalap Neve</h2>
+                    <input type="text" class="form-control" id="worksheetName" aria-describedby="worksheetName"
+                        placeholder="Sheet1">
+                    <small class="form-text text-muted">*Az alapértlemezett munkalap név "Sheet1". Hibás
+                        adat esetén nem lehetséges a páciens listát feltölteni.</small>
+                </div>
+
+                <div class="group">
+                    <h2>Ügyfél lista kiválasztása</h2>
+                    <div>
+                        <div class="custom-file" id="fileInputForm">
+                            <input type="file" class="custom-file-input" id="customFile">
+                            <label class="custom-file-label" id='inputLabel' for="customFile">Excel Fájl (.xlsx)
+                                ...</label>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="group">
+                    <div style="display: none; justify-content:space-between;" id="gridTitle">
+                        <h2> Páciensenk</h2>
+                        <div class="btn btn-light"> Összes páciensre generálás </div>
+                    </div>
+                    <div id="tableCard" class="card" style="display: none;">
+
+                        <div id="tableContainer" style="overflow-x:auto;">
+                            <table class="table table-striped" id="patientGrid">
+                                <thead id="tableHeader">
+                                </thead>
+                                <tbody id="tableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+
+            <div id="SettingsTab" class="tabcontent" style="display: none;">
+
+
+                <div class="group">
+
+                    <h2>Sablonok Hozzáadása</h2>
+                    <br>
+                    <ul id="sablonList" class="list-group">
+
+                    </ul>
+                </div>
+            </div>
+
+
+
+
+
+
+
+
+
+            <div id="InfoTab" class="tabcontent" style="display: none;">
+                <div class="group">
+                    <h3>Info</h3>
+
+
+
+                    <div class="group">
+
+
+
+                        <ul class="info">
+                            <li>
+                                Első oszlop szerint nevezi el a kimeneti docx fájlt [ROW]
+                            </li>
+                        </ul>
+
+                        <ul class="warning">
+                            <li>
+                                Az excel első sorában található értékek lesznek a kulcsok [COLUMN]
+                                <p class="goodPractice">- pl. excel headerben: személy_tel</p>
+                                <p class="goodPractice">- pl. docx fájlban: {személy_tel}</p>
+                            </li>
+                            <li>
+                                Fontos megnézni hogy az excel munka füzet oldal név egyezik e a beállítottakkal
+                            </li>
+                            <li>
+                                Fontos kivenni az összes olyan {értéket} a sablon .docx fájlból ami nem
+                                szerepel headerként az excelben. Különben {undefined}-as fogja ezt helyettesíteni.
+                            </li>
+                        </ul>
+
+                        <ul class="info">
+                            <li id="appVersion">App Verzió: </li>
+                            <li id="appDebug">Debug: </li>
+                            <li id="pathToRsc">rsc: </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+</body>
+<script src="../src/index.js"></script>
+
+
+<script>
+
+    function opentab(evt, tabName) {
+
+        // Declare all variables
+        var i, tabcontent, tablinks;
+
+        // Get all elements with class="tabcontent" and hide them
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+
+        // Get all elements with class="tablinks" and remove the class "active"
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace("active", "");
+        }
+
+        // Show the current tab, and add an "active" class to the link that opened the tab
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+</script>
+
+</html>
