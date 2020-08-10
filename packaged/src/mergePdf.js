@@ -1,3 +1,40 @@
+const PDFMerger = require('pdf-merger-js');
+
+
+
+
+
+
+async function mergePdf(sources, PatientData, innerDirPath) {
+
+    try {
+
+        var merger = new PDFMerger();
+        var fileName = "output.pdf";
+        //! indexedParam[ x ] should be function param
+
+        fileName = PatientData[indexedParam[0]] + "_" + fileName;
+        var filePath = path.join(innerDirPath, fileName);
+
+        for (var i = 0; i < sources.length; i++) {
+            merger.add(sources[i]);
+        }
+        await merger.save(filePath);
+
+        sources = [];
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+
+
+module.exports = { mergePdf }
+
+
+
+/*
 var DocxMerger = require('docx-merger');
 
 const fs = require('fs');
@@ -6,9 +43,9 @@ const globals = require('./globals.js');
 
 
 
-//? ========================================================================================================= 
+//? =========================================================================================================
 //?                    Return Temp Dir Path, creates dir if non existent
-//?                     
+//?
 //? =========================================================================================================
 function getTemporaryDirectory() {
     try {
@@ -24,9 +61,9 @@ function getTemporaryDirectory() {
 
 
 
-//? ========================================================================================================= 
+//? =========================================================================================================
 //?                     Delete Temp Dir Content
-//?                     
+//?
 //? =========================================================================================================
 function deleteTemporaryDirectoryContent() {
     try {
@@ -43,10 +80,10 @@ function deleteTemporaryDirectoryContent() {
 }
 
 
-//? ========================================================================================================= 
-//?                     Merge Conntent 
+//? =========================================================================================================
+//?                     Merge Conntent
 //!                     -- debug
-//!                     -- sometimes fails and returns "unidentified" instead of TemplateFile obj. 
+//!                     -- sometimes fails and returns "unidentified" instead of TemplateFile obj.
 //!                     -- Docx templater receives returned value and fails if return value is null.
 //? =========================================================================================================
 function generateSingleFile(paths) {
@@ -70,7 +107,7 @@ function generateSingleFile(paths) {
 
         debugger;
         docx.save('nodebuffer', function (data) {
-            // fs.writeFile("output.zip", data, function(err){/*...*/});
+            // fs.writeFile("output.zip", data, function(err){//error});
             fs.writeFileSync(outputPath, data, function (err) {
                 console.log(err);
             });
@@ -90,3 +127,4 @@ function generateSingleFile(paths) {
 module.exports = { generateSingleFile }
 
 
+*/

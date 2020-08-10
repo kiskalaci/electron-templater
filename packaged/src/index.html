@@ -45,7 +45,7 @@
                 <div class="form-group group">
                     <h2>Excel Munkalap Neve</h2>
                     <input type="text" class="form-control" id="worksheetName" aria-describedby="worksheetName"
-                        placeholder="Sheet1">
+                        placeholder="PáciensLista">
                     <small class="form-text text-muted">*Az alapértlemezett munkalap név "Sheet1". Hibás
                         adat esetén nem lehetséges a páciens listát feltölteni.</small>
                 </div>
@@ -65,7 +65,7 @@
                 <div class="group">
                     <div style="display: none; justify-content:space-between;" id="gridTitle">
                         <h2> Páciensenk</h2>
-                        <div class="btn btn-light"> Összes páciensre generálás </div>
+                        <div id="generateAll" class="btn btn-light"> Összes páciensre generálás </div>
                     </div>
                     <div id="tableCard" class="card" style="display: none;">
 
@@ -89,9 +89,13 @@
 
 
                 <div class="group">
+                    <div style="justify-content:space-between; display: flex;">
 
-                    <h2>Sablonok Hozzáadása</h2>
+                        <h2>Sablonok Hozzáadása</h2>
+                        <div id="addTemplate" class="btn btn-light">Hozzáadás..</div>
+                    </div>
                     <br>
+
                     <ul id="sablonList" class="list-group">
 
                     </ul>

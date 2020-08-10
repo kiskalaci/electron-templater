@@ -1,6 +1,9 @@
 var dialog = require('electron').remote.dialog;
 var PizZip = require('pizzip');
 var Docxtemplater = require('docxtemplater');
+const pdfFiller = require('pdffiller');
+
+
 
 
 var fs = require('fs');
@@ -38,6 +41,46 @@ function errorHandler(error) {
 
 
 
+
+//? ========================================================================================================= 
+//?                     Add Template to "Sablonok Tab"
+//?                     
+//? =========================================================================================================
+function generateFile(PatientData, TemplateFile, innerDirPath, cb) {
+    try {
+
+
+        var fileName = TemplateFile.fileName;
+        fileName = PatientData[indexedParam[0]] + "_" + fileName;
+        var filePath = path.join(innerDirPath, fileName);
+
+        return pdfFiller.fillForm(TemplateFile.filePath, filePath, PatientData, function (err) {
+            if (err) throw err;
+            console.log("In callback (we're done).");
+            cb(filePath);
+        });
+
+    } catch (error) {
+        debugger;
+        errorHandler(error);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 
 //? ========================================================================================================= 
 //?                     Add Template to "Sablonok Tab"
@@ -83,5 +126,5 @@ function generateFile(PatientData, TemplateFile, innerDirPath) {
 
     return filePath;
 }
-
+*/
 module.exports = { generateFile }

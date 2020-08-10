@@ -4,14 +4,17 @@ var app = require('electron').remote.app;
 const XLSX = require('xlsx');
 const path = require('path')
 const fs = require('fs');
-const templateGrid = document.getElementById('templateGrid');
-const fileInputForm = document.getElementById('customFile');
-const Templates = new Map();
-const Patients = new Map();
 const templater = require('./templater.js');
-const merger = require('./mergedocx.js');
+const merger = require('./mergePdf.js');
 const globals = require('./globals.js');
 const pjson = require('../package.json');
+const templateGrid = document.getElementById('templateGrid');
+const fileInputForm = document.getElementById('customFile');
+const generateAll = document.getElementById('generateAll');
+const addTemplate = document.getElementById('addTemplate');
+const Templates = new Map();
+const Patients = new Map();
+
 
 var patientJson;
 
@@ -27,7 +30,7 @@ fs.readdir(path_templatesFolder, (err, files) => {
 
     files.forEach(file => {
 
-        if (file.includes(".docx")) {
+        if (file.includes(".pdf")) {
 
             var fileInfo = fs.statSync(path.join(path_templatesFolder, file));
             tempFile = new TemplateFile(file, path_templatesFolder + file, false, fileInfo);
@@ -40,7 +43,7 @@ fs.readdir(path_templatesFolder, (err, files) => {
             tag.setAttribute("onclick", "buttonToggle()");
             templateGrid.appendChild(tag);
 
-            addTemplate(tempFile, sablonList);
+            templateSetup(tempFile, sablonList);
         }
     });
 });
@@ -98,6 +101,9 @@ function buttonToggle() {
 //? =========================================================================================================
 fileInputForm.addEventListener('change', function () {
 
+    indexedParam = {};
+    Patients.clear();
+
     var path = fileInputForm.files[0].path;
     var workbook = XLSX.readFile(path);
     patientJson = to_json(workbook);
@@ -123,8 +129,10 @@ function createHeader(obj) {
 
     header = document.getElementById("tableHeader");
     var headRow = document.createElement("tr");
-    var emptycell = document.createElement("th");
-    headRow.appendChild(emptycell);
+    var cellSelect = document.createElement("th");
+
+    headRow.appendChild(cellSelect);
+
 
     var i;
     for (i = 0; i < obj.length; i++) {
@@ -172,17 +180,62 @@ function createBody(obj) {
 
             //sorok száma
             var tableRow = document.createElement("tr");
-            var button = document.createElement("div");
 
-            button.id = obj[row][0] + obj[row][1];
-            button.className = "btn btn-link";
-            button.textContent = "Select Patient"
-            button.addEventListener("click", function (sender) {
-                selectPatientOnClick(sender);
+            var tdSelect = document.createElement("td");
+
+            tdSelect.style.display = "flex";
+            tdSelect.justifyContent = "space-between";
+            //var tdRemove = document.createElement("td");
+
+            var buttonSelect = document.createElement("div");
+            var buttonRemove = document.createElement("div");
+
+            buttonSelect.id = obj[row][0] + obj[row][1];
+            buttonSelect.className = "btn btn-primary";
+            buttonSelect.textContent = "Kiválaszt";
+
+            buttonRemove.className = "btn btn-danger";
+            buttonRemove.textContent = "Töröl";
+
+
+
+            buttonSelect.addEventListener("click", function (sender) {
+
+                var listOfFiles = selectedFiles();
+                var id = sender.toElement.id;
+                var outputDir = dialog.showOpenDialogSync({ properties: ["openDirectory"] });
+
+                if (listOfFiles.length == 0) { //!======================== No file selected
+
+                    alert("Nincsen kiválasztva sablon!");
+
+                } else {
+
+                    generateForSingleRow(id, listOfFiles, outputDir[0]);
+
+                }
             });
 
+
+
+            buttonRemove.addEventListener("click", function (sender) {
+                debugger;
+                var sender = sender.toElement;
+                var tr = sender.parentElement.parentElement.remove(); //omegalol
+                Patients.delete(sender.parentElement.firstElementChild.id);
+
+
+            });
+
+            tdSelect.appendChild(buttonSelect)
+            tdSelect.appendChild(buttonRemove)
+
+            tableRow.appendChild(tdSelect);
+            //tableRow.appendChild(tdRemove);
             body.appendChild(tableRow);
-            tableRow.appendChild(button);
+
+
+
 
 
             createPatientMap(obj[row]); //!     ===================================================     betegek map feltöl   ==============
@@ -229,6 +282,7 @@ function to_json(workbook) {
         if (lista.length) result[excelMunkalapNev] = lista;
 
     } catch (error) {
+        fileInputForm.value = "";
         alert("Hibás excel munkalap név!");
     }
 
@@ -239,40 +293,91 @@ function to_json(workbook) {
 
 
 //? ========================================================================================================= 
-//?                     Initiates file generation method calls
+//?                     Return selected files 
 //?                 
 //? =========================================================================================================
-function selectPatientOnClick(sender) {
-    var key = sender.toElement.id
-    var outputDir = dialog.showOpenDialogSync({ properties: ["openDirectory"] });
-    var innerChildDirectory = ResolveChildDirectory(outputDir, key);
-    var selected = false;
+function selectedFiles() {
 
     var listOfFiles = [];
+
     Templates.forEach(function (value, tempKey, map) {
         if (value.isSelected) {
-            selected = true;
             listOfFiles.push(value);
         }
     });
+    return listOfFiles;
+};
 
-    if (selected == false) { //!======================== No file selected
 
-        alert("Nincsen kiválasztva sablon!");
 
-    } else if (listOfFiles.length == 1) { //!======================== No merge needed
+//? ========================================================================================================= 
+//?                     Initiates file generation method calls
+//?                 
+//? =========================================================================================================
+async function generateForSingleRow(id, listOfFiles, outputDir) {
 
+    var key = id;
+    var innerChildDirectory;
+
+    if (listOfFiles.length == 1) { //!======================== No merge needed
+
+        innerChildDirectory = ResolveChildDirectory(outputDir, key);
         templater.generateFile(Patients.get(key), listOfFiles[0], innerChildDirectory);
 
     } else { //!======================== merging
 
-        var tempFile = merger.generateSingleFile(listOfFiles);
-        debugger;
-        templater.generateFile(Patients.get(key), tempFile, innerChildDirectory);
+        innerChildDirectory = ResolveChildDirectory(outputDir, key);
+        var toMerge = [];
+        for (var i = 0; i < listOfFiles.length; i++) {
 
+            templater.generateFile(Patients.get(key), listOfFiles[i], innerChildDirectory, function (paths) {
+                mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory);
+            });
+
+
+        }
     }
 }
 
+
+
+//? ========================================================================================================= 
+//?                     Merge All Pdf Callback
+//?                 
+//? =========================================================================================================
+function mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory) {
+
+    toMerge.push(paths);
+    if (listOfFiles.length == toMerge.length) {
+        merger.mergePdf(toMerge, Patients.get(key), innerChildDirectory);
+        toMerge = [];
+    }
+    console.log(paths);
+}
+
+
+
+//? ========================================================================================================= 
+//?                     Generate pdf for each datarow
+//?                 
+//? =========================================================================================================
+generateAll.addEventListener("click", function () {
+    var body = document.getElementById("tableBody");
+    var children = body.childNodes;
+    var listOfFiles = selectedFiles();
+    var outputDir = dialog.showOpenDialogSync({ properties: ["openDirectory"] });
+
+    if (listOfFiles.length == 0) { //!======================== No file selected
+
+        alert("Nincsen kiválasztva sablon!");
+
+    } else {
+
+        children.forEach(function (row) {
+            generateForSingleRow(children[0].childNodes[0].firstElementChild.id, listOfFiles, outputDir[0])
+        });
+    }
+});
 
 
 
@@ -281,11 +386,9 @@ function selectPatientOnClick(sender) {
 //?                 
 //? =========================================================================================================
 function ResolveChildDirectory(outputDir, key) {
-    outputDir += "/"; //TODO
-
     var counter = 0;
     var ertek = indexedParam[patientNameIndex];
-    var innerDirPath = outputDir + Patients.get(key)[ertek];
+    var innerDirPath = path.join(outputDir, Patients.get(key)[ertek]);
 
     while (fs.existsSync(innerDirPath)) {
         innerDirPath = innerDirPath.replace("(" + counter + ")", "");
@@ -316,13 +419,12 @@ function assignParameter(param) { // ! header debug fontos
             indexedParam[ujkulcs] = param[0][i];
         }
     }
-    debugger;
 }
 
 
 
 //? ========================================================================================================= 
-//?                     Indexed Param setup. Assigns an index to each excel header item
+//?                     Setup Patient Map
 //?                     
 //? =========================================================================================================
 function createPatientMap(map) {
@@ -342,7 +444,7 @@ function createPatientMap(map) {
 //?                     Add Template to "Sablonok Tab"
 //?                     
 //? =========================================================================================================
-function addTemplate(TemplateFile, sablonList) {
+function templateSetup(TemplateFile, sablonList) {
 
 
     var li = document.createElement("li");
@@ -350,7 +452,7 @@ function addTemplate(TemplateFile, sablonList) {
     var title = document.createElement("p");
     var date = document.createElement("small");
     var block = document.createElement("div");
-    var hidden = document.createElement("div");
+    // var hidden = document.createElement("div");
 
 
     //list item setup
@@ -367,9 +469,15 @@ function addTemplate(TemplateFile, sablonList) {
     date.textContent = "Utolsó Modosítás Dátuma: " + datetext;
 
     //del button setup
-    delButton.className = "delButton";
-    delButton.className = "btn btn-link delButton";
+    delButton.className = "btn btn-danger";
     delButton.textContent = "töröl";
+
+    delButton.addEventListener("click", function (param) {
+
+        removeSablon(TemplateFile, li);
+
+
+    });
 
     //append children
     block.appendChild(title);
@@ -384,13 +492,84 @@ function addTemplate(TemplateFile, sablonList) {
 
 
 
-//TODO ========================================================================================================= 
-//TODO                    Delete Template
-//TODO                    
-//TODO =========================================================================================================
-function removeSablon(TemplateFile) {
-    debugger;
+//? ========================================================================================================= 
+//?                    Delete Template and remove from grid
+//?                    
+//? =========================================================================================================
+function removeSablon(TemplateFile, row) {
+    try {
+        fs.unlinkSync(TemplateFile.filePath);
+        row.parentNode.removeChild(row);
+        var temp = document.getElementById(TemplateFile.fileName);
+        temp.parentNode.removeChild(temp);
+        Templates.delete(TemplateFile.fileName);
+
+    } catch (error) {
+        console.log(error);
+        debugger;
+    }
+
 }
+
+
+
+//? ========================================================================================================= 
+//?                   Add Template to file system
+//?                    
+//? =========================================================================================================
+addTemplate.addEventListener("click", function (sender) {
+
+    try {
+        var file = dialog.showOpenDialogSync();
+        debugger;
+        if (file[0].includes(".pdf")) {
+            var fileName = file[0].split("/");
+            fileName = fileName[fileName.length - 1];
+
+            var destination = path.join(path_templatesFolder, fileName);
+
+            fs.copyFileSync(file[0], destination, (err) => {
+                if (err) throw err;
+                console.log('pdf file was copied to destination directory');
+            });
+
+            fs.readdir(path_templatesFolder, (err, files) => {
+                var sablonList = document.getElementById("sablonList");
+
+
+                sablonList.innerHTML = "";
+                templateGrid.innerHTML = "";
+
+                files.forEach(file => {
+
+                    if (file.includes(".pdf")) {
+
+                        var fileInfo = fs.statSync(path.join(path_templatesFolder, file));
+                        tempFile = new TemplateFile(file, path_templatesFolder + file, false, fileInfo);
+                        Templates.set(file, tempFile);
+                        var tag = document.createElement("p");
+                        var text = document.createTextNode(file);
+                        tag.appendChild(text);
+                        tag.className = "btn btn-light"
+                        tag.id = (file);
+                        tag.setAttribute("onclick", "buttonToggle()");
+                        templateGrid.appendChild(tag);
+
+                        templateSetup(tempFile, sablonList);
+                    }
+                });
+            });
+        } else {
+            alert("Nem megfelelő fájl formátum !");
+        }
+    } catch (error) {
+
+    }
+
+
+
+});
+
 
 class TemplateFile {
     constructor(fileName, filePath, isSelected, fileInfo) {
