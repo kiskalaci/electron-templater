@@ -11,3 +11,4 @@ global.excelMunkalapNev = "PáciensLista";//"Sheet1";
 global.excelParam = "Param"
 global.patientNameIndex = 0;
 global.indexedParam = {};
+global.electronTemplatesHelper = "ElectronTemplatesHelper";

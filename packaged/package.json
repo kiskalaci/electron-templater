@@ -19,11 +19,13 @@
       "packaged/",
       "index.html"
     ],
-    "asar": true
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/pdfjs",
+      "node_modules/pdffiller"
+    ]
   },
   "dependencies": {
-    "docx-merger": "^1.2.2",
-    "docxtemplater": "^3.17.9",
     "mkdirp": "^1.0.4",
     "pdf-lib": "^1.9.0",
     "pdf-merger-js": "^3.0.5",
@@ -31,5 +33,5 @@
     "pizzip": "^3.0.6",
     "xlsx": "^0.16.4"
   },
-  "debug": true
+  "debug": false
 }

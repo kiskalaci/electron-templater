@@ -1,6 +1,4 @@
 var dialog = require('electron').remote.dialog;
-var PizZip = require('pizzip');
-var Docxtemplater = require('docxtemplater');
 const pdfFiller = require('pdffiller');
 
 
@@ -53,7 +51,7 @@ function generateFile(PatientData, TemplateFile, innerDirPath, cb) {
         var fileName = TemplateFile.fileName;
         fileName = PatientData[indexedParam[0]] + "_" + fileName;
         var filePath = path.join(innerDirPath, fileName);
-
+    
         return pdfFiller.fillForm(TemplateFile.filePath, filePath, PatientData, function (err) {
             if (err) throw err;
             console.log("In callback (we're done).");

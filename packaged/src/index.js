@@ -8,6 +8,7 @@ const templater = require('./templater.js');
 const merger = require('./mergePdf.js');
 const globals = require('./globals.js');
 const pjson = require('../package.json');
+const { last } = require('pdf-lib');
 const templateGrid = document.getElementById('templateGrid');
 const fileInputForm = document.getElementById('customFile');
 const generateAll = document.getElementById('generateAll');
@@ -19,35 +20,39 @@ const Patients = new Map();
 var patientJson;
 
 
+createTemplateGrid();
+
 //? ========================================================================================================= 
 //?                     Creates Template Grid
 //? 
 //? =========================================================================================================
-fs.readdir(path_templatesFolder, (err, files) => {
-    var sablonList = document.getElementById("sablonList");
+function createTemplateGrid() {
+    fs.readdir(path_templatesFolder, (err, files) => {
+        var sablonList = document.getElementById("sablonList");
+        sablonList.innerHTML = "";
+        templateGrid.innerHTML = "";
+        setupVersion();
 
-    setupVersion();
+        files.forEach(file => {
 
-    files.forEach(file => {
+            if (file.includes(".pdf")) {
 
-        if (file.includes(".pdf")) {
+                var fileInfo = fs.statSync(path.join(path_templatesFolder, file));
+                tempFile = new TemplateFile(file, path_templatesFolder + file, false, fileInfo);
+                Templates.set(file, tempFile);
+                var tag = document.createElement("p");
+                var text = document.createTextNode(file);
+                tag.appendChild(text);
+                tag.className = "btn btn-light"
+                tag.id = (file);
+                tag.setAttribute("onclick", "buttonToggle()");
+                templateGrid.appendChild(tag);
 
-            var fileInfo = fs.statSync(path.join(path_templatesFolder, file));
-            tempFile = new TemplateFile(file, path_templatesFolder + file, false, fileInfo);
-            Templates.set(file, tempFile);
-            var tag = document.createElement("p");
-            var text = document.createTextNode(file);
-            tag.appendChild(text);
-            tag.className = "btn btn-light"
-            tag.id = (file);
-            tag.setAttribute("onclick", "buttonToggle()");
-            templateGrid.appendChild(tag);
-
-            templateSetup(tempFile, sablonList);
-        }
+                templateSetup(tempFile, sablonList);
+            }
+        });
     });
-});
-
+}
 
 
 //? ========================================================================================================= 
@@ -205,13 +210,16 @@ function createBody(obj) {
                 var id = sender.toElement.id;
                 var outputDir = dialog.showOpenDialogSync({ properties: ["openDirectory"] });
 
+                var currentProcesses = new Array()
+                currentProcesses.push("new event");
+
                 if (listOfFiles.length == 0) { //!======================== No file selected
 
                     alert("Nincsen kiválasztva sablon!");
 
                 } else {
-
-                    generateForSingleRow(id, listOfFiles, outputDir[0]);
+                    createCopyOfTemplates(listOfFiles, outputDir[0]);
+                    generateForSingleRow(id, listOfFiles, outputDir[0], currentProcesses);
 
                 }
             });
@@ -219,7 +227,7 @@ function createBody(obj) {
 
 
             buttonRemove.addEventListener("click", function (sender) {
-                debugger;
+
                 var sender = sender.toElement;
                 var tr = sender.parentElement.parentElement.remove(); //omegalol
                 Patients.delete(sender.parentElement.firstElementChild.id);
@@ -314,24 +322,30 @@ function selectedFiles() {
 //?                     Initiates file generation method calls
 //?                 
 //? =========================================================================================================
-async function generateForSingleRow(id, listOfFiles, outputDir) {
+async function generateForSingleRow(id, listOfFiles, outputDir, currentProcesses) {
 
     var key = id;
     var innerChildDirectory;
+    var toMerge = [];
+
 
     if (listOfFiles.length == 1) { //!======================== No merge needed
 
         innerChildDirectory = ResolveChildDirectory(outputDir, key);
-        templater.generateFile(Patients.get(key), listOfFiles[0], innerChildDirectory);
+        templater.generateFile(Patients.get(key), listOfFiles[0], innerChildDirectory, function (paths) {
+
+            //idle;
+            mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory, currentProcesses);
+
+        });
 
     } else { //!======================== merging
 
         innerChildDirectory = ResolveChildDirectory(outputDir, key);
-        var toMerge = [];
-        for (var i = 0; i < listOfFiles.length; i++) {
 
+        for (var i = 0; i < listOfFiles.length; i++) {
             templater.generateFile(Patients.get(key), listOfFiles[i], innerChildDirectory, function (paths) {
-                mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory);
+                mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory, currentProcesses);
             });
 
 
@@ -345,14 +359,41 @@ async function generateForSingleRow(id, listOfFiles, outputDir) {
 //?                     Merge All Pdf Callback
 //?                 
 //? =========================================================================================================
-function mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory) {
+function mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory, currentProcesses) {
 
-    toMerge.push(paths);
-    if (listOfFiles.length == toMerge.length) {
-        merger.mergePdf(toMerge, Patients.get(key), innerChildDirectory);
-        toMerge = [];
+    try {
+
+        toMerge.push(paths);
+        if (listOfFiles.length == toMerge.length) {
+            merger.mergePdf(toMerge, Patients.get(key), innerChildDirectory);
+            toMerge = [];
+        }
+
+        currentProcesses.pop();
+        if (currentProcesses.length == 0) {
+
+            //! deletes file only if is last in iteration.
+            //! Or else throws error since other process is still using file;
+
+
+            for (var i = 0; i < listOfFiles.length; i++) {
+
+                if (fs.existsSync(listOfFiles[i].filePath)) {
+                    fs.unlinkSync(listOfFiles[i].filePath);
+                }
+                listOfFiles[i].filePath = path.join(path_templatesFolder, listOfFiles[0].fileName); //! reset path to the real template file;
+            }
+            if (fs.existsSync(listOfFiles[0].templatesHelperDir)) {
+                fs.rmdirSync(listOfFiles[0].templatesHelperDir);
+            }
+            alert("sikeres művelet ! :) ");
+        }
+        console.log(paths);
+
+    } catch (error) {
+        debugger;
+        console.log(error);
     }
-    console.log(paths);
 }
 
 
@@ -373,9 +414,21 @@ generateAll.addEventListener("click", function () {
 
     } else {
 
-        children.forEach(function (row) {
-            generateForSingleRow(children[0].childNodes[0].firstElementChild.id, listOfFiles, outputDir[0])
+
+        var currentProcesses = new Array();
+        for (var i = 0; i < (children.length * listOfFiles.length); i++) {  //! match the numbers of events
+            currentProcesses.push("new event");
+        }
+
+
+
+        createCopyOfTemplates(listOfFiles, outputDir[0]);
+
+        children.forEach(function (row, index, array) {
+            generateForSingleRow(row.childNodes[0].firstElementChild.id, listOfFiles, outputDir[0], currentProcesses)
         });
+
+
     }
 });
 
@@ -521,7 +574,7 @@ addTemplate.addEventListener("click", function (sender) {
 
     try {
         var file = dialog.showOpenDialogSync();
-        debugger;
+
         if (file[0].includes(".pdf")) {
             var fileName = file[0].split("/");
             fileName = fileName[fileName.length - 1];
@@ -533,32 +586,8 @@ addTemplate.addEventListener("click", function (sender) {
                 console.log('pdf file was copied to destination directory');
             });
 
-            fs.readdir(path_templatesFolder, (err, files) => {
-                var sablonList = document.getElementById("sablonList");
 
-
-                sablonList.innerHTML = "";
-                templateGrid.innerHTML = "";
-
-                files.forEach(file => {
-
-                    if (file.includes(".pdf")) {
-
-                        var fileInfo = fs.statSync(path.join(path_templatesFolder, file));
-                        tempFile = new TemplateFile(file, path_templatesFolder + file, false, fileInfo);
-                        Templates.set(file, tempFile);
-                        var tag = document.createElement("p");
-                        var text = document.createTextNode(file);
-                        tag.appendChild(text);
-                        tag.className = "btn btn-light"
-                        tag.id = (file);
-                        tag.setAttribute("onclick", "buttonToggle()");
-                        templateGrid.appendChild(tag);
-
-                        templateSetup(tempFile, sablonList);
-                    }
-                });
-            });
+            createTemplateGrid();
         } else {
             alert("Nem megfelelő fájl formátum !");
         }
@@ -569,6 +598,48 @@ addTemplate.addEventListener("click", function (sender) {
 
 
 });
+
+
+
+//? ========================================================================================================= 
+//?                   Create Copy of tempfile in output dir since asar format
+//?                    only allows read and not write of rsc files (ex: template files :)..)
+//? =========================================================================================================
+function createCopyOfTemplates(listOfFiles, outputDir) {
+
+    try {
+
+        outputDir = path.join(outputDir, electronTemplatesHelper)
+
+        if (fs.existsSync(outputDir)) {
+            fs.readdir(outputDir, (err, files) => {
+                files.forEach(file => {
+                    fs.unlinkSync(path.join(outputDir, file));
+                });
+            });
+        } else {
+            fs.mkdirSync(outputDir);
+        }
+
+
+        for (var i = 0; i < listOfFiles.length; i++) {
+
+            var fileName = listOfFiles[i].filePath.split("/");
+            fileName = fileName[fileName.length - 1];
+            var tempPath = path.join(outputDir, fileName);
+            fs.copyFileSync(listOfFiles[i].filePath, tempPath);
+            listOfFiles[i].filePath = tempPath;
+            listOfFiles[i].templatesHelperDir = outputDir;
+        }
+
+    } catch (error) {
+        console.log(error);
+        debugger;
+    }
+
+}
+
+
 
 
 class TemplateFile {
