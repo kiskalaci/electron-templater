@@ -21,6 +21,7 @@
     ],
     "asar": true,
     "asarUnpack": [
+      "assets/fonts",
       "assets/Template",
       "node_modules/utf8-fdf-generator",
       "node_modules/pdfjs",
@@ -29,7 +30,6 @@
   },
   "dependencies": {
     "hazardous": "^0.3.0",
-    "hummus": "^1.0.108",
     "muhammara": "^1.4.0",
     "node-pdftk": "^2.1.3",
     "pdf-lib": "^1.9.0",
@@ -37,5 +37,5 @@
     "pdffiller": "0.0.11",
     "xlsx": "^0.16.4"
   },
-  "debug": true
+  "debug": false
 }

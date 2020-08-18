@@ -1,7 +1,7 @@
 /**
  * PDFDigitalForm represents an existing form in a PDF file.
- * Parses a form (if exists) and provides its values in a simple manner. 
- */
+ * Parses a form (if exists) and provides its values in a simple manner.
+
 
 var _ = require('lodash'),
     muhammara = require('muhammara');
@@ -271,10 +271,10 @@ function accumulateFieldsValues(result, fieldsArray) {
 
 
 /**
- *  PDFDigitalForm constructor. 
+ *  PDFDigitalForm constructor.
  * @constructor
  * @param {PDFParser} pdfParser - A muhammara PDF Parser for the PDF to read form from.
- */
+
 function PDFDigitalForm(pdfParser) {
     this.acroformDict = parseForAcroformObject(pdfParser);
 
@@ -294,7 +294,7 @@ function PDFDigitalForm(pdfParser) {
 /**
  * @method hasForm
  * @return {bool} whether document has a form
- */
+
 PDFDigitalForm.prototype.hasForm = function () {
     return !!this.acroformDict;
 }
@@ -302,7 +302,7 @@ PDFDigitalForm.prototype.hasForm = function () {
 /**
  * @method createSimpleKeyValue
  * @return {object} dictionary mapping form full names to their respective values
- */
+
 PDFDigitalForm.prototype.createSimpleKeyValue = function () {
     // create flattened simple key value mapping by recursing.
     var result = {};
@@ -315,3 +315,6 @@ PDFDigitalForm.prototype.createSimpleKeyValue = function () {
 }
 
 module.exports = PDFDigitalForm
+
+
+    */

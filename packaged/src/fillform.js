@@ -1,6 +1,6 @@
 var muhammara = require('muhammara'),
     _ = require('lodash');
-
+const globals = require('./globals.js');
 var fontArial;
 
 /**
@@ -457,8 +457,8 @@ function writeFilledForm(handles, acroformDict) {
 }
 
 function fillForm(writer, data) {
-
-    fontArial = writer.getFontForFile('./assets/fonts/arial.ttf');
+   
+    fontArial = writer.getFontForFile(fontFolder + 'arial.ttf');
 
     // setup parser
     var reader = writer.getModifiedFileParser();

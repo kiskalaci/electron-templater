@@ -317,7 +317,7 @@ function convertWidgetAnnotationsToForm(handles, widgetAnnoations) {
 
 function lockPages(handles) {
     var reader = handles.reader;
-    debugger;
+    
     // iterate pages, and lock the fields on them
     for (var i = 0; i < reader.getPagesCount(); ++i) {
         var pageDictionary = reader.parsePageDictionary(i);

@@ -127,9 +127,11 @@ function generateFile(PatientData, TemplateFile, outputDir, appDataPath, cb) {
 //? =========================================================================================================
 function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
     try {
+       
+
         var fileName = TemplateFile.fileName;
         fileName = PatientData[indexedParam[0]] + "_" + fileName;
-        var filePath = path.join(outputDir, fileName);
+        var filePath = path.join(appDataPath, 'flattened' + fileName);
         filePath = resolveOutPutFilePath(filePath);
         var temporaryFile = getTemporaryFilePath(appDataPath, fileName);
 
@@ -146,20 +148,10 @@ function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
         });
         lockForm(writer);
         writer.end();
-
+    
         fs.unlinkSync(temporaryFile, (err) => { if (err) { console.log("Cannot delete temporary pdf file: " + err) } });
-        fs.rmdirSync(appDataPath);
-
-
-
-
-
-        return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
-            if (err) throw err;
-            console.log("In callback (we're done).");
-            cb(filePath);
-        });
-
+    
+        cb(filePath);
 
     } catch (error) {
         debugger;
@@ -171,7 +163,7 @@ function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
 
 
 function getTemporaryFilePath(appDataPath, fileName) {
-    debugger;
+    
     var fileExtension = '.pdf';
     var filePath = path.join(appDataPath, fileName);
     var counter = 0;
@@ -194,7 +186,7 @@ function getTemporaryFilePath(appDataPath, fileName) {
 
 function resolveOutPutFilePath(filePath) {
 
-    debugger;
+    
     var fileExtension = '.pdf';
     var counter = 0;
 

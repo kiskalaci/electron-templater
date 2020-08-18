@@ -6,7 +6,7 @@ const path = require('path');
 
 
 global.path_templatesFolder = pjson.debug ? "./assets/Template/" : path.join(app.getAppPath() + ".unpacked/", "./assets/Template/");
-//global.tempFolder = pjson.debug ? "./assets/Temp/" : path.join(app.getAppPath(), "./assets/Temp");
+global.fontFolder = pjson.debug ? "./assets/fonts/" : path.join(app.getAppPath()+ ".unpacked/", "./assets/fonts/");
 global.tempDocumentName = "output.docx";
 global.excelMunkalapNev = "PáciensLista";//"Sheet1";
 global.excelParam = "Param"

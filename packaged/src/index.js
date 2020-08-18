@@ -17,10 +17,6 @@ const Templates = new Map();
 const Patients = new Map();
 
 
-let muhammara = require('muhammara'), PDFDigitalForm = require('./digiform.js');
-///var pdfParser = muhammara.createReader('/Users/laszlokiska/Desktop/ANTIGEN_form.pdf');
-
-//var digitalForm = new PDFDigitalForm(pdfParser);
 var patientJson;
 
 
@@ -31,6 +27,7 @@ createTemplateGrid();
 //? 
 //? =========================================================================================================
 function createTemplateGrid() {
+    debugger;
     fs.readdir(path_templatesFolder, (err, files) => {
         var sablonList = document.getElementById("sablonList");
         sablonList.innerHTML = "";
@@ -56,6 +53,10 @@ function createTemplateGrid() {
             }
         });
     });
+
+    if (pjson.debug) {
+        alert('Az applikáció debug módban van!');
+    }
 }
 
 
