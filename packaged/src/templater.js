@@ -1,11 +1,10 @@
 var dialog = require('electron').remote.dialog;
-
 var fs = require('fs');
 var path = require('path');
 const globals = require('./globals.js');
-var pdfFiller = require('pdffiller');
 const pjson = require('../package.json');
 var muhammara = require('muhammara');
+const { exec } = require('child_process');
 let fillForm = require('./fillform.js').fillForm;
 let lockForm = require('./lockform.js').lockForm;
 
@@ -127,7 +126,7 @@ function generateFile(PatientData, TemplateFile, outputDir, appDataPath, cb) {
 //? =========================================================================================================
 function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
     try {
-       
+
 
         var fileName = TemplateFile.fileName;
         fileName = PatientData[indexedParam[0]] + "_" + fileName;
@@ -148,9 +147,9 @@ function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
         });
         lockForm(writer);
         writer.end();
-    
+
         fs.unlinkSync(temporaryFile, (err) => { if (err) { console.log("Cannot delete temporary pdf file: " + err) } });
-    
+
         cb(filePath);
 
     } catch (error) {
@@ -163,7 +162,7 @@ function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
 
 
 function getTemporaryFilePath(appDataPath, fileName) {
-    
+
     var fileExtension = '.pdf';
     var filePath = path.join(appDataPath, fileName);
     var counter = 0;
@@ -186,7 +185,7 @@ function getTemporaryFilePath(appDataPath, fileName) {
 
 function resolveOutPutFilePath(filePath) {
 
-    
+
     var fileExtension = '.pdf';
     var counter = 0;
 
@@ -206,156 +205,4 @@ function resolveOutPutFilePath(filePath) {
 }
 
 
-
-
-
-/*
-
-//? ========================================================================================================= 
-//?                     Add Template to "Sablonok Tab"
-//?                     
-//? =========================================================================================================
-function generateFile(PatientData, TemplateFile, appDataPath) {
-
-    debugger;
-
-    var fileName = TemplateFile.fileName;
-    fileName = PatientData[indexedParam[0]] + "_" + fileName;
-
-
-    //Load the docx file as a binary
-    var content = fs.readFileSync(TemplateFile.filePath, 'binary');
-
-    var zip = new PizZip(content);
-    var doc;
-    try {
-        doc = new Docxtemplater(zip);
-    } catch (error) {
-        // Catch compilation errors (errors caused by the compilation of the template : misplaced tags)
-        errorHandler(error);
-    }
-
-    //! set the templateVariables  ex: {név} => replaced by "Janis";
-    doc.setData(PatientData);
-
-    try {
-        // render the document (replace all occurences of {first_name} by John, {last_name} by Doe, ...)
-        doc.render()
-    }
-    catch (error) {
-        // Catch rendering errors (errors relating to the rendering of the template : angularParser throws an error)
-        errorHandler(error);
-    }
-    var buf = doc.getZip().generate({ type: 'nodebuffer' });
-
-    var filePath = path.join(appDataPath, fileName);
-
-    // buf is a nodejs buffer, you can either write it to a file or do anything else with it.
-    fs.writeFileSync(filePath, buf);
-
-    return filePath;
-}
-*/
-module.exports = { generateFile, generateFileToAppData }
-
-
-
-
-/*
-
-
-//? =========================================================================================================
-//?                     Fill pdf form
-//?
-//? =========================================================================================================
-function generateFile(PatientData, TemplateFile, outputDir, cb) {
-    try {
-
-        var fileName = TemplateFile.fileName;
-        fileName = PatientData[indexedParam[0]] + "_" + fileName;
-        var filePath = path.join(outputDir, fileName);
-
-
-
-
-
-        //var trialPath = getAppDataPath();
-        debugger;
-        //!create writer for form-fill
-        var writer = muhammara.createWriterToModify(TemplateFile.filePath, {
-            modifiedFilePath: filePath
-        });
-
-        //!fill form with data
-        fillForm(writer, PatientData);
-        //finish this...
-        writer.end();
-
-
-
-        writer = muhammara.createWriterToModify(filePath, {
-            modifiedFilePath: filePath
-        });
-
-        //!lock form
-        lockForm(writer);
-        //!finish it...
-        writer.end();
-
-        /*
-        return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
-            if (err) throw err;
-            console.log("In callback (we're done).");
-            cb(filePath);
-        });
-        ./
-
-    } catch (error) {
-        debugger;
-        errorHandler(error);
-    }
-}
-
-*/
-
-
-
-
-/*
-
-
-//? =========================================================================================================
-//?                     Fill pdf form
-//?
-//? =========================================================================================================
-function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
-    try {
-
-
-        //var tempFolder = "";
-
-
-        var fileName = TemplateFile.fileName;
-        fileName = PatientData[indexedParam[0]] + "_" + fileName;
-        var filePath = path.join(appDataPath, fileName);
-
-        var trialPath = getAppDataPath();
-
-        return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
-            if (err) throw err;
-            console.log("In callback (we're done).");
-            cb(filePath);
-        });
-
-    } catch (error) {
-        debugger;
-        errorHandler(error);
-    }
-}
-
-
-
-
-
-
-*/
+module.exports = { generateFile, generateFileToAppData };

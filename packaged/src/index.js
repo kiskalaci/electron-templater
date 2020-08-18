@@ -27,7 +27,7 @@ createTemplateGrid();
 //? 
 //? =========================================================================================================
 function createTemplateGrid() {
-    debugger;
+
     fs.readdir(path_templatesFolder, (err, files) => {
         var sablonList = document.getElementById("sablonList");
         sablonList.innerHTML = "";
@@ -55,7 +55,7 @@ function createTemplateGrid() {
     });
 
     if (pjson.debug) {
-        alert('Az applikáció debug módban van!');
+        alert("Az applikáció debug módban van!");
     }
 }
 
@@ -223,7 +223,7 @@ function createBody(obj) {
                     alert("Nincsen kiválasztva sablon!");
 
                 } else {
-                    createCopyOfTemplates(listOfFiles, outputDir[0]);
+
                     generateForSingleRow(id, listOfFiles, outputDir[0], currentProcesses);
 
                 }
@@ -409,10 +409,6 @@ generateAll.addEventListener("click", function () {
             currentProcesses.push("new event");
         }
 
-
-
-        createCopyOfTemplates(listOfFiles, outputDir[0]);
-
         children.forEach(function (row, index, array) {
             generateForSingleRow(row.childNodes[0].firstElementChild.id, listOfFiles, outputDir[0], currentProcesses)
         });
@@ -592,43 +588,6 @@ addTemplate.addEventListener("click", function (sender) {
 
 
 
-//? ========================================================================================================= 
-//?                   Create Copy of tempfile in output dir since asar format
-//?                    only allows read and not write of rsc files (ex: template files :)..)
-//? =========================================================================================================
-function createCopyOfTemplates(listOfFiles, outputDir) {
-    /*
-        try {
-    
-            outputDir = path.join(outputDir, electronTemplatesHelper)
-    
-            if (fs.existsSync(outputDir)) {
-                fs.readdir(outputDir, (err, files) => {
-                    files.forEach(file => {
-                        fs.unlinkSync(path.join(outputDir, file));
-                    });
-                });
-            } else {
-                fs.mkdirSync(outputDir);
-            }
-    
-    
-            for (var i = 0; i < listOfFiles.length; i++) {
-    
-                var fileName = listOfFiles[i].filePath.split("/");
-                fileName = fileName[fileName.length - 1];
-                var tempPath = path.join(outputDir, fileName);
-                fs.copyFileSync(listOfFiles[i].filePath, tempPath);
-                listOfFiles[i].filePath = tempPath;
-                listOfFiles[i].templatesHelperDir = outputDir;
-            }
-    
-        } catch (error) {
-            console.log(error);
-            debugger;
-        }
-    */
-}
 
 
 

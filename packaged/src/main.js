@@ -19,7 +19,10 @@ function createWindow() {
     win.loadFile('./src/index.html')
 
     // Open the DevTools.
-    win.webContents.openDevTools()
+
+    if (pjson.debug) {
+        win.webContents.openDevTools()
+    }
 }
 
 // This method will be called when Electron has finished

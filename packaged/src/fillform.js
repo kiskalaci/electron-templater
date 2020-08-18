@@ -1,5 +1,5 @@
-var muhammara = require('muhammara'),
-    _ = require('lodash');
+var muhammara = require('muhammara')
+var _ = require('lodash')
 const globals = require('./globals.js');
 var fontArial;
 
