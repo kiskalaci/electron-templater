@@ -5,7 +5,9 @@ var path = require('path');
 const globals = require('./globals.js');
 var pdfFiller = require('pdffiller');
 const pjson = require('../package.json');
-
+var muhammara = require('muhammara');
+let fillForm = require('./fillform.js').fillForm;
+let lockForm = require('./lockform.js').lockForm;
 
 
 function getAppDataPath() {
@@ -83,30 +85,40 @@ function errorHandler(error) {
 //?                     Fill pdf form
 //?                     
 //? =========================================================================================================
-function generateFile(PatientData, TemplateFile, outputDir, cb) {
+function generateFile(PatientData, TemplateFile, outputDir, appDataPath, cb) {
     try {
-
-
-        var tempFolder = "";
-
 
         var fileName = TemplateFile.fileName;
         fileName = PatientData[indexedParam[0]] + "_" + fileName;
         var filePath = path.join(outputDir, fileName);
+        filePath = resolveOutPutFilePath(filePath);
+        var temporaryFile = getTemporaryFilePath(appDataPath, fileName);
 
-        var trialPath = getAppDataPath();
 
-        return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
-            if (err) throw err;
-            console.log("In callback (we're done).");
-            cb(filePath);
+        var writer = muhammara.createWriterToModify(TemplateFile.filePath, {
+            modifiedFilePath: temporaryFile
         });
+        fillForm(writer, PatientData);
+        writer.end();
+
+
+        writer = muhammara.createWriterToModify(temporaryFile, {
+            modifiedFilePath: filePath
+        });
+        lockForm(writer);
+        writer.end();
+
+        fs.unlinkSync(temporaryFile, (err) => { if (err) { console.log("Cannot delete temporary pdf file: " + err) } });
+        fs.rmdirSync(appDataPath);
+
+
 
     } catch (error) {
         debugger;
         errorHandler(error);
     }
 }
+
 
 
 //? ========================================================================================================= 
@@ -115,22 +127,39 @@ function generateFile(PatientData, TemplateFile, outputDir, cb) {
 //? =========================================================================================================
 function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
     try {
-
-
-        var tempFolder = "";
-
-
         var fileName = TemplateFile.fileName;
         fileName = PatientData[indexedParam[0]] + "_" + fileName;
-        var filePath = path.join(appDataPath, fileName);
+        var filePath = path.join(outputDir, fileName);
+        filePath = resolveOutPutFilePath(filePath);
+        var temporaryFile = getTemporaryFilePath(appDataPath, fileName);
 
-        var trialPath = getAppDataPath();
+
+        var writer = muhammara.createWriterToModify(TemplateFile.filePath, {
+            modifiedFilePath: temporaryFile
+        });
+        fillForm(writer, PatientData);
+        writer.end();
+
+
+        writer = muhammara.createWriterToModify(temporaryFile, {
+            modifiedFilePath: filePath
+        });
+        lockForm(writer);
+        writer.end();
+
+        fs.unlinkSync(temporaryFile, (err) => { if (err) { console.log("Cannot delete temporary pdf file: " + err) } });
+        fs.rmdirSync(appDataPath);
+
+
+
+
 
         return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
             if (err) throw err;
             console.log("In callback (we're done).");
             cb(filePath);
         });
+
 
     } catch (error) {
         debugger;
@@ -140,6 +169,49 @@ function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
 
 
 
+
+function getTemporaryFilePath(appDataPath, fileName) {
+    debugger;
+    var fileExtension = '.pdf';
+    var filePath = path.join(appDataPath, fileName);
+    var counter = 0;
+
+
+    while (fs.existsSync(filePath)) {
+
+        var pathWithoutExtension = filePath.split(".pdf");
+        pathWithoutExtension = pathWithoutExtension[0];
+
+        pathWithoutExtension = pathWithoutExtension.replace("(" + counter + ")", "");
+        counter++;
+        pathWithoutExtension = pathWithoutExtension + "(" + counter + ")";
+
+        filePath = pathWithoutExtension + fileExtension;
+    }
+    return filePath;
+}
+
+
+function resolveOutPutFilePath(filePath) {
+
+    debugger;
+    var fileExtension = '.pdf';
+    var counter = 0;
+
+
+    while (fs.existsSync(filePath)) {
+
+        var pathWithoutExtension = filePath.split(".pdf");
+        pathWithoutExtension = pathWithoutExtension[0];
+
+        pathWithoutExtension = pathWithoutExtension.replace("(" + counter + ")", "");
+        counter++;
+        pathWithoutExtension = pathWithoutExtension + "(" + counter + ")";
+
+        filePath = pathWithoutExtension + fileExtension;
+    }
+    return filePath;
+}
 
 
 
@@ -193,3 +265,105 @@ function generateFile(PatientData, TemplateFile, appDataPath) {
 }
 */
 module.exports = { generateFile, generateFileToAppData }
+
+
+
+
+/*
+
+
+//? =========================================================================================================
+//?                     Fill pdf form
+//?
+//? =========================================================================================================
+function generateFile(PatientData, TemplateFile, outputDir, cb) {
+    try {
+
+        var fileName = TemplateFile.fileName;
+        fileName = PatientData[indexedParam[0]] + "_" + fileName;
+        var filePath = path.join(outputDir, fileName);
+
+
+
+
+
+        //var trialPath = getAppDataPath();
+        debugger;
+        //!create writer for form-fill
+        var writer = muhammara.createWriterToModify(TemplateFile.filePath, {
+            modifiedFilePath: filePath
+        });
+
+        //!fill form with data
+        fillForm(writer, PatientData);
+        //finish this...
+        writer.end();
+
+
+
+        writer = muhammara.createWriterToModify(filePath, {
+            modifiedFilePath: filePath
+        });
+
+        //!lock form
+        lockForm(writer);
+        //!finish it...
+        writer.end();
+
+        /*
+        return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
+            if (err) throw err;
+            console.log("In callback (we're done).");
+            cb(filePath);
+        });
+        ./
+
+    } catch (error) {
+        debugger;
+        errorHandler(error);
+    }
+}
+
+*/
+
+
+
+
+/*
+
+
+//? =========================================================================================================
+//?                     Fill pdf form
+//?
+//? =========================================================================================================
+function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
+    try {
+
+
+        //var tempFolder = "";
+
+
+        var fileName = TemplateFile.fileName;
+        fileName = PatientData[indexedParam[0]] + "_" + fileName;
+        var filePath = path.join(appDataPath, fileName);
+
+        var trialPath = getAppDataPath();
+
+        return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
+            if (err) throw err;
+            console.log("In callback (we're done).");
+            cb(filePath);
+        });
+
+    } catch (error) {
+        debugger;
+        errorHandler(error);
+    }
+}
+
+
+
+
+
+
+*/

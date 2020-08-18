@@ -63,7 +63,7 @@ function collectWidgetAnnotations(reader, pageDictionary) {
 function writeNewXObjectsWithPrefix(xobjects, prefix, widgetAnnoations) {
     var results = [];
     widgetAnnoations.forEach(function (item, index) {
-        formObjectName = prefix + '_' + index;
+        let formObjectName = prefix + '_' + index;
         xobjects.writeKey(formObjectName);
         xobjects.writeObjectReferenceValue(item.id);
         results.push({
@@ -77,14 +77,14 @@ function writeNewXObjectsWithPrefix(xobjects, prefix, widgetAnnoations) {
 function writeNewXObjectDict(resources, objectsContext, widgetAnnoations) {
     var results = [];
     resources.writeKey('XObject');
-    xobjects = objectsContext.startDictionary();
+    let xobjects = objectsContext.startDictionary();
     results = writeNewXObjectsWithPrefix(xobjects, 'myForm', widgetAnnoations);
     objectsContext.endDictionary(xobjects);
     return results;
 }
 
 function writeNewResourcesDictionary(objectsContext, widgetAnnoations) {
-    resources = objectsContext.startDictionary();
+    let resources = objectsContext.startDictionary();
     var results = writeNewXObjectDict(resources, objectsContext, widgetAnnoations);
     objectsContext.endDictionary(resources);
 
@@ -135,7 +135,7 @@ function writeModifiedResourcesDict(handles, resources, widgetAnnoations) {
 
     if (resources.exists('XObject')) {
         modifiedResourcesDict.writeKey('XObject');
-        xobjects = objectsContext.startDictionary();
+        let xobjects = objectsContext.startDictionary();
         var existingXObjectsDict = reader.queryDictionaryObject(resources, 'XObject').toPDFDictionary().toJSObject();
         // copy existing names, while at it creating a new different prefix name for new xobjects
         var i = 0;
@@ -151,7 +151,8 @@ function writeModifiedResourcesDict(handles, resources, widgetAnnoations) {
         objectsContext.endDictionary(xobjects);
     }
     else {
-        results = writeNewXObjectDict(resources, objectsContext, widgetAnnoations);
+        //results = writeNewXObjectDict(resources,objectsContext,widgetAnnoations);
+        results = writeNewXObjectDict(modifiedResourcesDict, objectsContext, widgetAnnoations);
     }
     objectsContext
         .endDictionary(modifiedResourcesDict)
@@ -178,9 +179,9 @@ function lockWidgetAnnotationsForPage(handles, pageObjectId, pageDictionary, wid
 
 
     // rewrite page object. we'll need to remove the widget annotations, create new content overlay
-    // and add annotation forms to the page resources dict...easy 
+    // and add annotation forms to the page resources dict...easy
     objectsContext.startModifiedIndirectObject(pageObjectId);
-    modifiedPageDictionary = startModifiedDictionary(handles, pageDictionary, { 'Annots': -1, 'Resources': -1, 'Contents': -1 });
+    let modifiedPageDictionary = startModifiedDictionary(handles, pageDictionary, { 'Annots': -1, 'Resources': -1, 'Contents': -1 });
 
     // 1. rewrite the annots entry, without the widget annotations (don't mind if it's empty now)
     modifiedPageDictionary.writeKey('Annots');
@@ -316,7 +317,7 @@ function convertWidgetAnnotationsToForm(handles, widgetAnnoations) {
 
 function lockPages(handles) {
     var reader = handles.reader;
-
+    debugger;
     // iterate pages, and lock the fields on them
     for (var i = 0; i < reader.getPagesCount(); ++i) {
         var pageDictionary = reader.parsePageDictionary(i);
@@ -334,7 +335,7 @@ function removeForm(handles) {
     var catalogDict = reader.queryDictionaryObject(reader.getTrailer(), 'Root').toPDFDictionary();
     var catalogObjectId = reader.getTrailer().queryObject('Root').toPDFIndirectObjectReference().getObjectID();
     objectsContext.startModifiedIndirectObject(catalogObjectId);
-    modifiedCatalogDictionary = startModifiedDictionary(handles, catalogDict, { 'AcroForm': -1 });
+    let modifiedCatalogDictionary = startModifiedDictionary(handles, catalogDict, { 'AcroForm': -1 });
     objectsContext
         .endDictionary(modifiedCatalogDictionary)
         .endIndirectObject();
@@ -364,4 +365,4 @@ function lockForm(writer) {
 
 module.exports = {
     lockForm: lockForm
-}
+};

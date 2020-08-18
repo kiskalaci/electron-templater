@@ -336,7 +336,7 @@ async function generateForSingleRow(id, listOfFiles, outputDir, currentProcesses
     if (listOfFiles.length == 1) { //!======================== No merge needed
 
         appDataPath = ResolveChildDirectory(getAppDataPath(), key);
-        templater.generateFile(Patients.get(key), listOfFiles[0], outputDir, function (paths) {
+        templater.generateFile(Patients.get(key), listOfFiles[0], outputDir, appDataPath, function (paths) {
 
             //idle;
             //mergecallback(paths, listOfFiles, toMerge, key, appDataPath, currentProcesses);
@@ -369,7 +369,7 @@ function mergecallback(paths, listOfFiles, toMerge, key, outputDir, appDataPath,
 
         toMerge.push(paths);
         if (listOfFiles.length == toMerge.length) {
-        
+
             merger.mergePdf(toMerge, Patients.get(key), outputDir, appDataPath);
             toMerge = [];
         }
@@ -430,9 +430,6 @@ function ResolveChildDirectory(outputDir, key) {
 
     var counter = 0;
     var ertek = indexedParam[patientNameIndex];
-
-
-    //var innerDirPath = path.join(outputDir, Patients.get(key).get(ertek));//!==========================================     Compatible with map!
     var innerDirPath = path.join(outputDir, Patients.get(key)[ertek]);
 
     while (fs.existsSync(innerDirPath)) {

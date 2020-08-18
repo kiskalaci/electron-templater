@@ -49,16 +49,6 @@ async function mergePdf(sources, PatientData, outputDir, appDataPath) {
         fs.rmdirSync(appDataPath);
 
 
-
-
-
-        var writer = muhammara.createWriterToModify(filePath, {
-            modifiedFilePath: "/Users/laszlokiska/Desktop/output.pdf"
-        });
-
-
-        lockForm(writer);
-        writer.end();
     } catch (error) {
         console.log(error);
         debugger;

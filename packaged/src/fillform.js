@@ -1,6 +1,8 @@
 var muhammara = require('muhammara'),
     _ = require('lodash');
 
+var fontArial;
+
 /**
  * toText function. should get this into muhammara proper sometimes
  */
@@ -51,7 +53,7 @@ function updateOptionButtonValue(handles, fieldDictionary, value) {
         // this radio button has just one option and its in the widget. also means no kids
         var modifiedDict = startModifiedDictionary(handles, fieldDictionary, { 'V': -1, 'AS': -1 });
         var appearanceName;
-        if (value === null) {
+        if (value === null || value === 0) {
             // false is easy, just write '/Off' as the value and as the appearance stream
             appearanceName = 'Off';
         }
@@ -120,21 +122,21 @@ function updateOptionButtonValue(handles, fieldDictionary, value) {
 
 function writeAppearanceXObjectForText(handles, formId, fieldsDictionary, text, inheritedProperties) {
     var rect = handles.reader.queryDictionaryObject(fieldsDictionary, 'Rect').toPDFArray().toJSArray();
-    da = fieldsDictionary.exists('DA') ? fieldsDictionary.queryObject('DA').toString() : inheritedProperties['DA'];
+    let da = fieldsDictionary.exists('DA') ? fieldsDictionary.queryObject('DA').toString() : inheritedProperties['DA'];
 
     // register to copy resources from form default resources dict [would have been better to just refer to it...but alas don't have access for xobject resources dict]
-    if (handles.acroformDict.exists('DR')) {
-        handles.writer.getEvents().once('OnResourcesWrite', function (args) {
-            // copy all but the keys that exist already
-            var dr = handles.reader.queryDictionaryObject(handles.acroformDict, 'DR').toPDFDictionary().toJSObject();
-            Object.getOwnPropertyNames(dr).forEach(function (element, index, array) {
-                if (element !== 'ProcSet') {
-                    args.pageResourcesDictionaryContext.writeKey(element);
-                    handles.copyingContext.copyDirectObjectAsIs(dr[element]);
-                }
-            });
-        });
-    }
+    /*  if(handles.acroformDict.exists('DR')) {
+          handles.writer.getEvents().once('OnResourcesWrite',function(args){
+              // copy all but the keys that exist already
+              var dr = handles.reader.queryDictionaryObject(handles.acroformDict,'DR').toPDFDictionary().toJSObject();
+              Object.getOwnPropertyNames(dr).forEach(function(element,index,array) {
+                  if (element !== 'ProcSet') {
+                      args.pageResourcesDictionaryContext.writeKey(element);
+                      handles.copyingContext.copyDirectObjectAsIs(dr[element]);
+                  }
+              });
+          });
+      }*/
 
     var xobjectForm = handles.writer.createFormXObject(
         0,
@@ -143,18 +145,21 @@ function writeAppearanceXObjectForText(handles, formId, fieldsDictionary, text, 
         rect[3].value - rect[1].value,
         formId);
 
-    // Will use Tj with "code" encoding to write the text, assuming encoding should work (??). if it won't i need real fonts here
-    // and DA is not gonna be useful. so for now let's use as is.
-    // For the same reason i'm not support Quad, as well.
+
+
     xobjectForm.getContentContext()
         .writeFreeCode('/Tx BMC\r\n')
         .q()
         .BT()
         .writeFreeCode(da + '\r\n')
-        .Tj(text, { encoding: 'code' })
+        .Ts(3)
+        .Tf(fontArial, 10)
+        .Tj(text)
         .ET()
         .Q()
-        .writeFreeCode('EMC')
+        .writeFreeCode('EMC');
+
+
     handles.writer.endFormXObject(xobjectForm);
 }
 
@@ -452,8 +457,13 @@ function writeFilledForm(handles, acroformDict) {
 }
 
 function fillForm(writer, data) {
+
+    fontArial = writer.getFontForFile('./assets/fonts/arial.ttf');
+
     // setup parser
     var reader = writer.getModifiedFileParser();
+
+
 
     // start out by finding the acrobat form
     var catalogDict = reader.queryDictionaryObject(reader.getTrailer(), 'Root').toPDFDictionary(),
