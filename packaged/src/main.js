@@ -1,10 +1,8 @@
+require('hazardous');
 const { app, BrowserWindow } = require('electron')
 const shell = require('electron').shell
-const pjson = require('./package.json');
+const pjson = require('../package.json');
 const path = require('path');
-
-
-
 
 function createWindow() {
     // Create the browser window.

@@ -17,6 +17,10 @@ const Templates = new Map();
 const Patients = new Map();
 
 
+let muhammara = require('muhammara'), PDFDigitalForm = require('./digiform.js');
+///var pdfParser = muhammara.createReader('/Users/laszlokiska/Desktop/ANTIGEN_form.pdf');
+
+//var digitalForm = new PDFDigitalForm(pdfParser);
 var patientJson;
 
 
@@ -325,27 +329,27 @@ function selectedFiles() {
 async function generateForSingleRow(id, listOfFiles, outputDir, currentProcesses) {
 
     var key = id;
-    var innerChildDirectory;
+    var appDataPath;
     var toMerge = [];
 
 
     if (listOfFiles.length == 1) { //!======================== No merge needed
 
-        innerChildDirectory = ResolveChildDirectory(outputDir, key);
-        templater.generateFile(Patients.get(key), listOfFiles[0], innerChildDirectory, function (paths) {
+        appDataPath = ResolveChildDirectory(getAppDataPath(), key);
+        templater.generateFile(Patients.get(key), listOfFiles[0], outputDir, function (paths) {
 
             //idle;
-            mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory, currentProcesses);
+            //mergecallback(paths, listOfFiles, toMerge, key, appDataPath, currentProcesses);
 
         });
 
     } else { //!======================== merging
 
-        innerChildDirectory = ResolveChildDirectory(outputDir, key);
+        appDataPath = ResolveChildDirectory(getAppDataPath(), key);
 
         for (var i = 0; i < listOfFiles.length; i++) {
-            templater.generateFile(Patients.get(key), listOfFiles[i], innerChildDirectory, function (paths) {
-                mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory, currentProcesses);
+            templater.generateFileToAppData(Patients.get(key), listOfFiles[i], appDataPath, function (paths) {
+                mergecallback(paths, listOfFiles, toMerge, key, outputDir, appDataPath, currentProcesses);
             });
 
 
@@ -359,36 +363,20 @@ async function generateForSingleRow(id, listOfFiles, outputDir, currentProcesses
 //?                     Merge All Pdf Callback
 //?                 
 //? =========================================================================================================
-function mergecallback(paths, listOfFiles, toMerge, key, innerChildDirectory, currentProcesses) {
+function mergecallback(paths, listOfFiles, toMerge, key, outputDir, appDataPath, currentProcesses) {
 
     try {
 
         toMerge.push(paths);
         if (listOfFiles.length == toMerge.length) {
-            merger.mergePdf(toMerge, Patients.get(key), innerChildDirectory);
+        
+            merger.mergePdf(toMerge, Patients.get(key), outputDir, appDataPath);
             toMerge = [];
         }
-
         currentProcesses.pop();
-        if (currentProcesses.length == 0) {
 
-            //! deletes file only if is last in iteration.
-            //! Or else throws error since other process is still using file;
-
-
-            for (var i = 0; i < listOfFiles.length; i++) {
-
-                if (fs.existsSync(listOfFiles[i].filePath)) {
-                    fs.unlinkSync(listOfFiles[i].filePath);
-                }
-                listOfFiles[i].filePath = path.join(path_templatesFolder, listOfFiles[0].fileName); //! reset path to the real template file;
-            }
-            if (fs.existsSync(listOfFiles[0].templatesHelperDir)) {
-                fs.rmdirSync(listOfFiles[0].templatesHelperDir);
-            }
-            alert("sikeres művelet ! :) ");
-        }
         console.log(paths);
+
 
     } catch (error) {
         debugger;
@@ -439,8 +427,12 @@ generateAll.addEventListener("click", function () {
 //?                 
 //? =========================================================================================================
 function ResolveChildDirectory(outputDir, key) {
+
     var counter = 0;
     var ertek = indexedParam[patientNameIndex];
+
+
+    //var innerDirPath = path.join(outputDir, Patients.get(key).get(ertek));//!==========================================     Compatible with map!
     var innerDirPath = path.join(outputDir, Patients.get(key)[ertek]);
 
     while (fs.existsSync(innerDirPath)) {
@@ -486,6 +478,7 @@ function createPatientMap(map) {
     var i;
     for (i = 0; i < Object.keys(indexedParam).length; i++) {
         map[i] == null ? "" : map[i];
+        //rekord.set(indexedParam[i], map[i]);
         rekord[indexedParam[i]] = map[i];
     }
     Patients.set(map[0] + map[1], rekord);
@@ -606,38 +599,66 @@ addTemplate.addEventListener("click", function (sender) {
 //?                    only allows read and not write of rsc files (ex: template files :)..)
 //? =========================================================================================================
 function createCopyOfTemplates(listOfFiles, outputDir) {
-
-    try {
-
-        outputDir = path.join(outputDir, electronTemplatesHelper)
-
-        if (fs.existsSync(outputDir)) {
-            fs.readdir(outputDir, (err, files) => {
-                files.forEach(file => {
-                    fs.unlinkSync(path.join(outputDir, file));
+    /*
+        try {
+    
+            outputDir = path.join(outputDir, electronTemplatesHelper)
+    
+            if (fs.existsSync(outputDir)) {
+                fs.readdir(outputDir, (err, files) => {
+                    files.forEach(file => {
+                        fs.unlinkSync(path.join(outputDir, file));
+                    });
                 });
-            });
-        } else {
-            fs.mkdirSync(outputDir);
+            } else {
+                fs.mkdirSync(outputDir);
+            }
+    
+    
+            for (var i = 0; i < listOfFiles.length; i++) {
+    
+                var fileName = listOfFiles[i].filePath.split("/");
+                fileName = fileName[fileName.length - 1];
+                var tempPath = path.join(outputDir, fileName);
+                fs.copyFileSync(listOfFiles[i].filePath, tempPath);
+                listOfFiles[i].filePath = tempPath;
+                listOfFiles[i].templatesHelperDir = outputDir;
+            }
+    
+        } catch (error) {
+            console.log(error);
+            debugger;
         }
-
-
-        for (var i = 0; i < listOfFiles.length; i++) {
-
-            var fileName = listOfFiles[i].filePath.split("/");
-            fileName = fileName[fileName.length - 1];
-            var tempPath = path.join(outputDir, fileName);
-            fs.copyFileSync(listOfFiles[i].filePath, tempPath);
-            listOfFiles[i].filePath = tempPath;
-            listOfFiles[i].templatesHelperDir = outputDir;
-        }
-
-    } catch (error) {
-        console.log(error);
-        debugger;
-    }
-
+    */
 }
+
+
+
+
+
+
+//? ========================================================================================================= 
+//?                   Get App Data Path
+//?                    
+//? =========================================================================================================
+function getAppDataPath() {
+    switch (process.platform) {
+        case "darwin": {
+            return path.join(process.env.HOME, "Library", "Application Support", pjson.name);
+        }
+        case "win32": {
+            return path.join(process.env.APPDATA, pjson.name);
+        }
+        case "linux": {
+            return path.join(process.env.HOME, pjson.name);
+        }
+        default: {
+            console.log("Unsupported platform!");
+            process.exit(1);
+        }
+    }
+}
+
 
 
 

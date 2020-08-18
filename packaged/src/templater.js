@@ -1,11 +1,50 @@
 var dialog = require('electron').remote.dialog;
-const pdfFiller = require('pdffiller');
-
-
-
 
 var fs = require('fs');
 var path = require('path');
+const globals = require('./globals.js');
+var pdfFiller = require('pdffiller');
+const pjson = require('../package.json');
+
+
+
+function getAppDataPath() {
+    switch (process.platform) {
+        case "darwin": {
+            return path.join(process.env.HOME, "Library", "Application Support", pjson.name);
+        }
+        case "win32": {
+            return path.join(process.env.APPDATA, pjson.name);
+        }
+        case "linux": {
+            return path.join(process.env.HOME, pjson.name);
+        }
+        default: {
+            console.log("Unsupported platform!");
+            process.exit(1);
+        }
+    }
+}
+
+function getBinaryPath() {
+    switch (process.platform) {
+        case "darwin": {
+            return "/usr/local/bin/pdftk";
+        }
+        case "win32": {
+            return "pdftk";
+        }
+        case "linux": {
+            return path.join(process.env.HOME, pjson.name);
+        }
+        default: {
+            console.log("Unsupported platform!");
+            process.exit(1);
+        }
+    }
+}
+
+
 
 
 // The error object contains additional information when logged with JSON.stringify (it contains a properties object containing all suberrors).
@@ -41,18 +80,53 @@ function errorHandler(error) {
 
 
 //? ========================================================================================================= 
-//?                     Add Template to "Sablonok Tab"
+//?                     Fill pdf form
 //?                     
 //? =========================================================================================================
-function generateFile(PatientData, TemplateFile, innerDirPath, cb) {
+function generateFile(PatientData, TemplateFile, outputDir, cb) {
     try {
+
+
+        var tempFolder = "";
 
 
         var fileName = TemplateFile.fileName;
         fileName = PatientData[indexedParam[0]] + "_" + fileName;
-        var filePath = path.join(innerDirPath, fileName);
-    
-        return pdfFiller.fillForm(TemplateFile.filePath, filePath, PatientData, function (err) {
+        var filePath = path.join(outputDir, fileName);
+
+        var trialPath = getAppDataPath();
+
+        return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
+            if (err) throw err;
+            console.log("In callback (we're done).");
+            cb(filePath);
+        });
+
+    } catch (error) {
+        debugger;
+        errorHandler(error);
+    }
+}
+
+
+//? ========================================================================================================= 
+//?                     Fill pdf form
+//?                     
+//? =========================================================================================================
+function generateFileToAppData(PatientData, TemplateFile, appDataPath, cb) {
+    try {
+
+
+        var tempFolder = "";
+
+
+        var fileName = TemplateFile.fileName;
+        fileName = PatientData[indexedParam[0]] + "_" + fileName;
+        var filePath = path.join(appDataPath, fileName);
+
+        var trialPath = getAppDataPath();
+
+        return pdfFiller.fillFormWithOptions(getBinaryPath(), TemplateFile.filePath, filePath, PatientData, false, trialPath, function (err) {
             if (err) throw err;
             console.log("In callback (we're done).");
             cb(filePath);
@@ -71,20 +145,13 @@ function generateFile(PatientData, TemplateFile, innerDirPath, cb) {
 
 
 
-
-
-
-
-
-
-
 /*
 
 //? ========================================================================================================= 
 //?                     Add Template to "Sablonok Tab"
 //?                     
 //? =========================================================================================================
-function generateFile(PatientData, TemplateFile, innerDirPath) {
+function generateFile(PatientData, TemplateFile, appDataPath) {
 
     debugger;
 
@@ -117,7 +184,7 @@ function generateFile(PatientData, TemplateFile, innerDirPath) {
     }
     var buf = doc.getZip().generate({ type: 'nodebuffer' });
 
-    var filePath = path.join(innerDirPath, fileName);
+    var filePath = path.join(appDataPath, fileName);
 
     // buf is a nodejs buffer, you can either write it to a file or do anything else with it.
     fs.writeFileSync(filePath, buf);
@@ -125,4 +192,4 @@ function generateFile(PatientData, TemplateFile, innerDirPath) {
     return filePath;
 }
 */
-module.exports = { generateFile }
+module.exports = { generateFile, generateFileToAppData }

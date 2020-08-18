@@ -104,3 +104,4 @@ dist
 .tern-port
 packaged/.DS_Store
 .DS_Store
+packaged/assets/Template/.DS_Store
