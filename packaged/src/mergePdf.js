@@ -4,12 +4,12 @@ const path = require('path')
 var muhammara = require('muhammara'),
     lockForm = require('./lockform.js').lockForm;
 
-
+var furthermerge = [];
 
 async function mergePdf(sources, PatientData, outputDir, appDataPath, currentProcesses) {
 
     try {
-
+        debugger;
         var merger = new PDFMerger();
         var fileName = "output.pdf";
         var fileExtension = ".pdf";
@@ -37,6 +37,9 @@ async function mergePdf(sources, PatientData, outputDir, appDataPath, currentPro
 
         await merger.save(filePath);
 
+
+        furthermerge.push(filePath);
+
         sources = [];
 
         var files = fs.readdirSync(appDataPath);
@@ -48,18 +51,17 @@ async function mergePdf(sources, PatientData, outputDir, appDataPath, currentPro
         }
         fs.rmdirSync(appDataPath);
 
-        processCounter(currentProcesses);
+        processCounter(currentProcesses, outputDir);
 
     } catch (error) {
         console.log(error);
+        furthermerge = [];
         debugger;
     }
 }
 
 
-function processCounter(currentProcesses) {
-
-
+function processCounter(currentProcesses, outputDir) {
 
 
     currentProcesses.pop();
@@ -74,31 +76,98 @@ function processCounter(currentProcesses) {
     progressBar.style.width = width;
     progressBar.innerText = doneCount + "/" + modal.value;
 
-
-
-
     if (currentProcesses.length == 0) {
+
+        if (furthermerge.length > 1) {
+            mergePdfFurther(furthermerge, outputDir);
+        } else {
+            var delayInMilliseconds = 1000; //1 second
+
+            setTimeout(function () {
+
+                progressBar.innerText = "kész :)!";
+
+
+                setTimeout(function () {
+
+                    modal.style.display = "none";
+
+
+                }, delayInMilliseconds);
+
+            }, delayInMilliseconds);
+            furthermerge = [];
+        }
+    }
+
+}
+
+
+
+async function mergePdfFurther(sources, outputDir) {
+
+    try {
+
+        var merger = new PDFMerger();
+        var fileName = "output.pdf";
+        var fileExtension = ".pdf";
+        //! indexedParam[ x ] should be function param
+
+        var filePath = path.join(outputDir, fileName);
+        for (var i = 0; i < sources.length; i++) {
+            merger.add(sources[i]);
+        }
+
+
+        var counter = 0;
+        while (fs.existsSync(filePath)) {
+
+            var pathWithoutExtension = filePath.split(".pdf");
+            pathWithoutExtension = pathWithoutExtension[0];
+
+            pathWithoutExtension = pathWithoutExtension.replace("(" + counter + ")", "");
+            counter++;
+            pathWithoutExtension = pathWithoutExtension + "(" + counter + ")";
+
+            filePath = pathWithoutExtension + fileExtension;
+        }
+
+        await merger.save(filePath);
+
+
+
+        for (var i = 0; i < furthermerge.length; i++) {
+            if (fs.existsSync(furthermerge[i])) {
+                fs.unlinkSync(furthermerge[i]);
+            }
+        }
+
 
         var delayInMilliseconds = 1000; //1 second
 
         setTimeout(function () {
-
             progressBar.innerText = "kész :)!";
-
-
             setTimeout(function () {
-
                 modal.style.display = "none";
-
-
             }, delayInMilliseconds);
-
         }, delayInMilliseconds);
 
 
+        furthermerge = [];
+    } catch (error) {
+        console.log(error);
+        furthermerge = [];
+        debugger;
     }
-
 }
+
+
+
+
+
+
+
+
 
 
 

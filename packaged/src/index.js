@@ -37,7 +37,7 @@ function createTemplateGrid() {
 
     var ws = document.getElementById("worksheetName");
 
-    ws.placeholder = excelMunkalapNev;
+    ws.placeholder = pjson.excelMunkaLapNev;
 
 
     if (currentDay < trialPeriod) {
@@ -359,7 +359,11 @@ async function generateForSingleRow(id, listOfFiles, outputDir, currentProcesses
 
     if (listOfFiles.length == 1) { //!======================== No merge needed
 
-        appDataPath = ResolveChildDirectory(getAppDataPath(), key);
+
+        appDataPath = ResolveChildDirectory(outputDir, key);
+       
+       
+       
         templater.generateFile(Patients.get(key), listOfFiles[0], outputDir, appDataPath, function (paths) {
 
             //idle;
@@ -390,7 +394,7 @@ async function generateForSingleRow(id, listOfFiles, outputDir, currentProcesses
 function mergecallback(paths, listOfFiles, toMerge, key, outputDir, appDataPath, currentProcesses) {
 
     try {
-
+        debugger;
         toMerge.push(paths);
         if (listOfFiles.length == toMerge.length) {
 
