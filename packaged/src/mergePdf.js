@@ -6,7 +6,7 @@ var muhammara = require('muhammara'),
 
 
 
-async function mergePdf(sources, PatientData, outputDir, appDataPath) {
+async function mergePdf(sources, PatientData, outputDir, appDataPath, currentProcesses) {
 
     try {
 
@@ -48,11 +48,56 @@ async function mergePdf(sources, PatientData, outputDir, appDataPath) {
         }
         fs.rmdirSync(appDataPath);
 
+        processCounter(currentProcesses);
 
     } catch (error) {
         console.log(error);
         debugger;
     }
+}
+
+
+function processCounter(currentProcesses) {
+
+
+
+
+    currentProcesses.pop();
+
+
+    var modal = document.getElementById("myModal");
+    var progressBar = document.getElementById("progressBar");
+    var doneCount = modal.value - currentProcesses.length;
+
+    var width = (doneCount / modal.value) * 100 + "%";
+
+    progressBar.style.width = width;
+    progressBar.innerText = doneCount + "/" + modal.value;
+
+
+
+
+    if (currentProcesses.length == 0) {
+
+        var delayInMilliseconds = 1000; //1 second
+
+        setTimeout(function () {
+
+            progressBar.innerText = "kész :)!";
+
+
+            setTimeout(function () {
+
+                modal.style.display = "none";
+
+
+            }, delayInMilliseconds);
+
+        }, delayInMilliseconds);
+
+
+    }
+
 }
 
 

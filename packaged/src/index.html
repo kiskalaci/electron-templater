@@ -79,8 +79,22 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
+
+                <div id="myModal" class="modal">
+                    <div class="modal-content">
+                        <p>Sikeresen Generált pdf-ek száma: </p>
+                        <div class="container">
+                            <div class="progress">
+                                <div id="progressBar" class="progress-bar progress-bar-striped bg-info"
+                                    role="progressbar" style="width: 1%" aria-valuenow="50" aria-valuemin="0"
+                                    aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
 
 
 
@@ -111,43 +125,125 @@
 
 
             <div id="InfoTab" class="tabcontent" style="display: none;">
+
+
+
                 <div class="group">
                     <h3>Info</h3>
 
 
-
-                    <div class="group">
-
+                    <div class="container">
 
 
-                        <ul class="info">
-                            <li>
-                                Első oszlop szerint nevezi el a kimeneti docx fájlt [ROW]
-                            </li>
-                        </ul>
+                        <div class="group" style="margin-top: 50px;">
+                            <div class="info">
+                                <h5> <img src="../assets/images/file-code.svg" alt="triangle with all three sides equal"
+                                        height="30px" style="margin-bottom: 10px;" /> Fejlesztési Adatok </h5>
+                                <ul>
+                                    <small class="form-text text-muted" id="appVersion">App Verzió: </small>
+                                    <small class="form-text text-muted" id="appDebug">Debug: </small>
+                                    <small class="form-text text-muted" id="lastBuild"> </small>
+                                    <small class="form-text text-muted" id="pathToRsc">rsc: </small>
+                                </ul>
+                            </div>
 
-                        <ul class="warning">
-                            <li>
-                                Az excel első sorában található értékek lesznek a kulcsok [COLUMN]
-                                <p class="goodPractice">- pl. excel headerben: személy_tel</p>
-                                <p class="goodPractice">- pl. docx fájlban: {személy_tel}</p>
-                            </li>
-                            <li>
-                                Fontos megnézni hogy az excel munka füzet oldal név egyezik e a beállítottakkal
-                            </li>
-                            <li>
-                                Fontos kivenni az összes olyan {értéket} a sablon .docx fájlból ami nem
-                                szerepel headerként az excelben. Különben {undefined}-as fogja ezt helyettesíteni.
-                            </li>
-                        </ul>
 
-                        <ul class="info">
-                            <li id="appVersion">App Verzió: </li>
-                            <li id="appDebug">Debug: </li>
-                            <li id="pathToRsc">rsc: </li>
-                        </ul>
+                            <br>
+
+
+                            <div>
+                                <h5>Excel</h5>
+                                <ul>
+                                    <li>
+                                        Első oszlop szerint nevezi el a kimeneti docx fájlt [ROW].
+                                    </li>
+                                    <li>
+                                        Az excel első sorában található értékek lesznek a kulcsok [COLUMN].
+                                        <small class="form-text text-muted" style="margin-left: 10px;">excel headerben:
+                                            személy_tel</small>
+                                        <small class="form-text text-muted" style="margin-left: 10px;">a pdf form
+                                            fájlban a személy_tel nevű kitölthető mező</small>
+                                    </li>
+                                    <li>
+                                        Fontos megnézni hogy az excel munka füzet oldal név egyezik e a beállítottakkal
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <br>
+
+                            <div>
+                                <h5>Pdf Formok</h5>
+                                <ul>
+                                    <li>
+                                        A pdf form egy kitölthető pdf fájl. A mi sablon fájlaink ilyen formátumban
+                                        vannak tárolva.
+                                    </li>
+                                    <br>
+                                    <li>
+                                        Elkészítése: a meglévő word documentumot, pdf ként kell exportálni.
+                                    </li>
+                                    <br>
+                                    <li>
+                                        Az exportált dokumentumot egy pdf szerkesztőben kell megnyitni ,majd a szükséges
+                                        kitölthető cellákat létre kell hozni.
+                                        <a href="#" class="btn btn-link" role="button"
+                                            aria-pressed="true">https://www.pdfescape.com/</a>
+                                    </li>
+                                    <li>
+                                        Fontos hogy a cellák nevét a excel headerjében található értékek szerint kell
+                                        kitölteni.
+                                    </li>
+                                </ul>
+
+                                <br>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <h5>pdfescape Demo</h5>
+                        <div class="tutorial" style="margin-left: 30px; display: inline-block;">
+                            <br>
+                            <div class="mycard">
+                                <div style="margin-bottom:5px;margin-left: 5px;">
+                                    <h6>Cellák Hozzáadása</h6>
+                                    <img src="../assets/images/tool.png" alt="">
+                                </div>
+
+                            </div>
+
+                            <br>
+                            <br>
+
+                            <div class="mycard">
+                                <div style="margin-bottom:5px;margin-left: 5px;">
+                                    <h6>Cella tulajdonságok</h6>
+                                    <img src="../assets/images/properties.png" alt="">
+                                </div>
+
+                            </div>
+
+                            <br>
+                            <br>
+
+                            <div class="mycard">
+
+                                <div style="margin-bottom:5px;margin-left: 5px;">
+                                    <h6>Név megadása</h6>
+                                    <img src="../assets/images/properties2.png" alt="">
+                                </div>
+                            </div>
+
+                        </div>
+
                     </div>
                 </div>
+
+
+
             </div>
 
         </div>
@@ -181,6 +277,18 @@
         // Show the current tab, and add an "active" class to the link that opened the tab
         document.getElementById(tabName).style.display = "block";
         evt.currentTarget.className += " active";
+    }
+
+
+
+
+
+
+    var modal = document.getElementById("myModal");
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
     }
 </script>
 

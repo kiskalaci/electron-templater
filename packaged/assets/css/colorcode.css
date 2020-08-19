@@ -4,7 +4,8 @@
 }
 
 .info {
-    color: turquoise;
+    color: #7d7d7d;
+    filter: invert(54%) sepia(1%) saturate(0%) hue-rotate(55deg) brightness(91%) contrast(94%);
 }
 
 .warning {

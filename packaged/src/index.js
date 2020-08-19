@@ -13,8 +13,11 @@ const templateGrid = document.getElementById('templateGrid');
 const fileInputForm = document.getElementById('customFile');
 const generateAll = document.getElementById('generateAll');
 const addTemplate = document.getElementById('addTemplate');
+const currentDay = new Date();
+const trialPeriod = new Date(2020, 08, 20);
 const Templates = new Map();
 const Patients = new Map();
+
 
 
 var patientJson;
@@ -28,32 +31,46 @@ createTemplateGrid();
 //? =========================================================================================================
 function createTemplateGrid() {
 
-    fs.readdir(path_templatesFolder, (err, files) => {
-        var sablonList = document.getElementById("sablonList");
-        sablonList.innerHTML = "";
-        templateGrid.innerHTML = "";
-        setupVersion();
 
-        files.forEach(file => {
+    debugger;
+    setupVersion();
 
-            if (file.includes(".pdf")) {
+    var ws = document.getElementById("worksheetName");
 
-                var fileInfo = fs.statSync(path.join(path_templatesFolder, file));
-                tempFile = new TemplateFile(file, path_templatesFolder + file, false, fileInfo);
-                Templates.set(file, tempFile);
-                var tag = document.createElement("p");
-                var text = document.createTextNode(file);
-                tag.appendChild(text);
-                tag.className = "btn btn-light"
-                tag.id = (file);
-                tag.setAttribute("onclick", "buttonToggle()");
-                templateGrid.appendChild(tag);
+    ws.placeholder = excelMunkalapNev;
 
-                templateSetup(tempFile, sablonList);
-            }
+
+    if (currentDay < trialPeriod) {
+
+
+        fs.readdir(path_templatesFolder, (err, files) => {
+            var sablonList = document.getElementById("sablonList");
+            sablonList.innerHTML = "";
+            templateGrid.innerHTML = "";
+
+
+            files.forEach(file => {
+
+                if (file.includes(".pdf")) {
+
+                    var fileInfo = fs.statSync(path.join(path_templatesFolder, file));
+                    tempFile = new TemplateFile(file, path_templatesFolder + file, false, fileInfo);
+                    Templates.set(file, tempFile);
+                    var tag = document.createElement("p");
+                    var text = document.createTextNode(file);
+                    tag.appendChild(text);
+                    tag.className = "btn btn-light"
+                    tag.id = (file);
+                    tag.setAttribute("onclick", "buttonToggle()");
+                    templateGrid.appendChild(tag);
+
+                    templateSetup(tempFile, sablonList);
+                }
+            });
         });
-    });
-
+    } else {
+        alert("App verzió: " + pjson.version + " , " + pjson.build_datum);
+    }
     if (pjson.debug) {
         alert("Az applikáció debug módban van!");
     }
@@ -69,6 +86,7 @@ function setupVersion() {
     document.getElementById("pathToRsc").innerText += path_templatesFolder;
     document.getElementById("appDebug").innerText += pjson.debug;
     document.getElementById("appVersion").innerText += pjson.version;
+    document.getElementById("lastBuild").innerText += pjson.build_datum;
 
 }
 
@@ -329,6 +347,11 @@ function selectedFiles() {
 //? =========================================================================================================
 async function generateForSingleRow(id, listOfFiles, outputDir, currentProcesses) {
 
+    if (currentProcesses.length > 1) {
+        var modal = document.getElementById("myModal");
+        modal.style.display = "block";
+    }
+
     var key = id;
     var appDataPath;
     var toMerge = [];
@@ -371,10 +394,9 @@ function mergecallback(paths, listOfFiles, toMerge, key, outputDir, appDataPath,
         toMerge.push(paths);
         if (listOfFiles.length == toMerge.length) {
 
-            merger.mergePdf(toMerge, Patients.get(key), outputDir, appDataPath);
+            merger.mergePdf(toMerge, Patients.get(key), outputDir, appDataPath, currentProcesses);
             toMerge = [];
         }
-        currentProcesses.pop();
 
         console.log(paths);
 
@@ -395,17 +417,31 @@ generateAll.addEventListener("click", function () {
     var body = document.getElementById("tableBody");
     var children = body.childNodes;
     var listOfFiles = selectedFiles();
+
+
+
+    var modal = document.getElementById("myModal");
+    var progressBar = document.getElementById("progressBar");
+
+    modal.style.display = "block";
+    modal.value = children.length;
+    progressBar.style.width = "1%";
+    progressBar.innerText = "0/" + children.length;
+
+
+
     var outputDir = dialog.showOpenDialogSync({ properties: ["openDirectory"] });
 
     if (listOfFiles.length == 0) { //!======================== No file selected
 
         alert("Nincsen kiválasztva sablon!");
+        modal.style.display = "none";
 
-    } else {
+    } else if (outputDir != null) {
 
-
+        modal.style.display = "block";
         var currentProcesses = new Array();
-        for (var i = 0; i < (children.length * listOfFiles.length); i++) {  //! match the numbers of events
+        for (var i = 0; i < children.length; i++) {  //! match the numbers of events
             currentProcesses.push("new event");
         }
 
@@ -414,6 +450,8 @@ generateAll.addEventListener("click", function () {
         });
 
 
+    } else {
+        modal.style.display = "none";
     }
 });
 

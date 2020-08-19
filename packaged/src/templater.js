@@ -8,7 +8,6 @@ const { exec } = require('child_process');
 let fillForm = require('./fillform.js').fillForm;
 let lockForm = require('./lockform.js').lockForm;
 
-
 function getAppDataPath() {
     switch (process.platform) {
         case "darwin": {
@@ -110,7 +109,7 @@ function generateFile(PatientData, TemplateFile, outputDir, appDataPath, cb) {
         fs.unlinkSync(temporaryFile, (err) => { if (err) { console.log("Cannot delete temporary pdf file: " + err) } });
         fs.rmdirSync(appDataPath);
 
-
+        alert("A pdf sikeresen generálódott!");
 
     } catch (error) {
         debugger;

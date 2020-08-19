@@ -1,6 +1,5 @@
 {
   "name": "pdftemplater",
-  "version": "1.0.0",
   "description": "",
   "main": "src/main.js",
   "scripts": {
@@ -34,5 +33,7 @@
     "pdf-merger-js": "^3.0.5",
     "xlsx": "^0.16.4"
   },
-  "debug": true
+  "debug": true,
+  "version": "1.0.1",
+  "build_datum": "Buildelés Dátuma: 2020.Augusztus.18"
 }
